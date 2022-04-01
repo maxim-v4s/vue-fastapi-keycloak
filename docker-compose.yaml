@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+#  postgres:
+#      image: postgres:14
+#      volumes:
+#          - ./data_store/sql:/var/lib/postgresql/data
+#      environment:
+#        POSTGRES_DB: keycloak
+#        POSTGRES_USER: keycloak
+#        POSTGRES_PASSWORD: password
+#      ports:
+#        - "5432:5432"
+
+  keycloak:
+      image: quay.io/keycloak/keycloak:17.0.0
+      command: start-dev
+      environment:
+        KC_FEATURES: docker
+
+        KEYCLOAK_ADMIN: admin
+        KEYCLOAK_ADMIN_PASSWORD: pass
+      ports:
+        - "8080:8080"
+        - "8443:8443"
+        - "9990:9990"
+#      depends_on:
+#        - postgres
+
+  backend:
+      build: ./backend
+      ports:
+        - "5000:5000"
+      environment:
+        - DATABASE_URL=postgres://keycloak:password@db:5432/keycloak
+        - SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      volumes:
+        - ./backend:/app
+#      command: /bin/bash
+      command: uvicorn app:app --reload --host 0.0.0.0 --port 5000
+#      depends_on:
+#        - postgres
+
+  frontend:
+      build: ./demo
+      volumes:
+        - './demo:/app'
+      ports:
+          - "8081:8081"
